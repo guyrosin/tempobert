@@ -117,7 +117,7 @@ class DataTrainingArguments:
     """
 
     dataset_name: Optional[str] = field(
-        default=None,
+        default="temporal_text_dataset.py",
         metadata={"help": "The name of the dataset to use (via the datasets library)."},
     )
     dataset_config_name: Optional[str] = field(
