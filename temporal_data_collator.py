@@ -58,8 +58,12 @@ class DataCollatorForTimePrependedLanguageModeling(DataCollatorForLanguageModeli
             input_ids_without_time = torch.cat(
                 (batch["input_ids"][:, :1], batch["input_ids"][:, 2:]), dim=1
             )
-            special_mask_without_time = torch.cat(
-                (special_tokens_mask[:, :1], special_tokens_mask[:, 2:]), dim=1
+            special_mask_without_time = (
+                torch.cat(
+                    (special_tokens_mask[:, :1], special_tokens_mask[:, 2:]), dim=1
+                )
+                if special_tokens_mask is not None
+                else None
             )
             # Apply masking on the inputs and on the time tokens, separately
             time_tokens = batch["input_ids"][:, 1]

@@ -5,7 +5,6 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
-import datasets
 from loguru import logger
 from transformers import (
     CONFIG_MAPPING,
@@ -21,6 +20,7 @@ from transformers.models.bert.tokenization_bert import BertTokenizer
 from transformers.trainer_utils import get_last_checkpoint, is_main_process, set_seed
 from transformers.utils import logging as hf_logging
 
+import datasets
 import utils
 from configuration_temporal_models import TempoBertConfig
 from tokenization_tempobert_fast import TempoBertTokenizerFast
@@ -116,7 +116,7 @@ def load_pretrained_model(
         **tokenizer_kwargs,
     )
     if tokenizer.model_max_length > LARGE_INTEGER:
-        # Hardcode model_max_length in case it wasn't saved with the pretrained model (happened for 'prajjwal1/bert-tiny')
+        # hardcode model_max_length in case it wasn't saved with the pretrained model (happened for 'prajjwal1/bert-tiny')
         tokenizer.model_max_length = 128 if hasattr(config, 'times') else 512
     if not verbose:
         hf_logging.set_verbosity(current_log_level)
@@ -156,12 +156,14 @@ def init_run(
         args_filename=args_filename,
     )
 
-    # Set fp16 to True if cuda is available
+    # set fp16 to True if cuda is available
     if training_args.device.type == "cuda":
         training_args.fp16 = True
-    # Set dataloader_pin_memory to False if no_cuda is set (o.w. an exception will be thrown in the DataLoader)
+    # set dataloader_pin_memory to False if no_cuda is set (o.w. an exception will be thrown in the DataLoader)
     if training_args.no_cuda:
         training_args.dataloader_pin_memory = False
+    # special_tokens_mask was getting removed from the dataset and it hurt performance -> don't remove unused columns
+    training_args.remove_unused_columns = False
 
     for args_instance in (model_args, data_args, training_args):
         if args is not None:
@@ -185,7 +187,7 @@ def init_run(
     if is_main_process(training_args.local_rank):
         logger.add(f"{training_args.logging_dir}/training_log_{date_str}.log")
     else:
-        # Show only warnings (at least)
+        # show only warnings (at least)
         logger.remove()
         logger.add(sys.stderr, level="WARNING")
     utils.set_result_logger_level()
@@ -196,11 +198,11 @@ def init_run(
     for args_instance in (model_args, data_args, training_args):
         logger.info(args_instance)
 
-    # Set the Transformers logger (on main process only)
+    # set the Transformers logger (on main process only)
     file_handler_path = f"{training_args.logging_dir}/hf_log_{date_str}.log"
     set_transformers_logging(training_args, file_handler_path=file_handler_path)
 
-    # Detecting last checkpoint.
+    # detect last checkpoint
     last_checkpoint = None
     if (
         os.path.isdir(training_args.output_dir)
@@ -221,7 +223,7 @@ def init_run(
                 "the `--output_dir` or add `--overwrite_output_dir` to train from scratch."
             )
 
-    # Set seed before initializing model
+    # set seed before initializing model
     set_seed(training_args.seed)
 
     register_temporal_classes()
@@ -238,7 +240,6 @@ def get_model_name(model_name_or_path):
         else:
             model_name_or_path = str(path.name)
     return model_name_or_path
-
 
 
 def prepare_tf_classes():
