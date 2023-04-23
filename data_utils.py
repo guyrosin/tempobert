@@ -120,7 +120,6 @@ def split_temporal_dataset_files(
     train_path = Path(train_path)
     test_path = Path(test_path)
     dataset_path = get_dataset_path(train_path, corpus_name, train_size, test_size)
-    exclude_similar_sentences = True if corpus_name.startswith("liverpool") else False
     out_train_path = dataset_path / train_path.name
     out_test_path = dataset_path / test_path.name
     if Path(out_train_path).exists() and Path(out_test_path).exists():
@@ -141,7 +140,6 @@ def split_temporal_dataset_files(
                 path,
                 size_per_time=size,
                 dataset_to_exclude=dataset_to_exclude,
-                exclude_similar_sentences=exclude_similar_sentences,
             )
             out_path.mkdir(parents=True, exist_ok=True)
             for time, sentences in dataset.items():
